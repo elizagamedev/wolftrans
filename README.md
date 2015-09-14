@@ -6,6 +6,13 @@
 Wolf Trans is a set of tools to aid in the translation of games made using
 [Wolf RPG Editor](http://www.silversecond.com/WolfRPGEditor/). The syntax and functionality is inspired primarily by the [RPG Maker Trans](http://rpgmakertrans.bitbucket.org/) project.
 
+## Installation
+Installation is as easy as typing this command in your terminal:
+
+    gem install wolftrans
+
+If you are using Windows, you will need to have Ruby installed first. You can download it from [here](http://rubyinstaller.org/downloads/).
+
 ## Example
 The source code for the translation patch file used in the sample image above is the following:
 
