@@ -1,4 +1,4 @@
-module Wolf
+module WolfRpg
   module IO
     ########
     # Read #

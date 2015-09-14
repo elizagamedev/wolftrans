@@ -1,4 +1,4 @@
-module Wolf
+module WolfRpg
   class Database
     attr_accessor :name #DEBUG
     attr_accessor :types

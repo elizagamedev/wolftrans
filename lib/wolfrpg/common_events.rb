@@ -1,6 +1,6 @@
-require 'wolf/command'
+require 'wolfrpg/command'
 
-module Wolf
+module WolfRpg
   class CommonEvents
     attr_accessor :events
 

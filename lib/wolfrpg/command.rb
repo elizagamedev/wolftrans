@@ -1,6 +1,6 @@
-require 'wolf/route'
+require 'wolfrpg/route'
 
-module Wolf
+module WolfRpg
   class Command
     attr_reader :cid
     attr_reader :args

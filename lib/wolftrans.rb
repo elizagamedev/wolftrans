@@ -1,6 +1,6 @@
 require 'wolftrans/patch_text'
 require 'wolftrans/patch_data'
-require 'wolf'
+require 'wolfrpg'
 
 module WolfTrans
   class Patch
@@ -143,14 +143,14 @@ module WolfTrans
       ext = File.extname(basename_downcase)
 
       if ext.downcase == '.mps'
-        Wolf::Map.new(path).grep(needle)
+        WolfRpg::Map.new(path).grep(needle)
       elsif ext.downcase == '.project'
         next if basename_downcase == 'sysdatabasebasic.project'
         dat_filename = WolfTrans.join_path_nocase(parent_path, "#{basename_noext}.dat")
         next if dat_filename == nil
-        Wolf::Database.new(path, dat_filename).grep(needle)
+        WolfRpg::Database.new(path, dat_filename).grep(needle)
       elsif basename_downcase == 'commonevent.dat'
-        Wolf::CommonEvents.new(path).grep(needle)
+        WolfRpg::CommonEvents.new(path).grep(needle)
       end
     end
   end
@@ -159,7 +159,7 @@ module WolfTrans
     Find.find(dir) do |path|
       next if FileTest.directory? path
       if File.extname(path).downcase == '.mps'
-        Wolf::Map.new(path).grep_cid(cid)
+        WolfRpg::Map.new(path).grep_cid(cid)
       end
     end
   end

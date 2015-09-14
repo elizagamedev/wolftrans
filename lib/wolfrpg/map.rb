@@ -1,8 +1,8 @@
-require 'wolf/io'
-require 'wolf/route'
-require 'wolf/command'
+require 'wolfrpg/io'
+require 'wolfrpg/route'
+require 'wolfrpg/command'
 
-module Wolf
+module WolfRpg
   class Map
     attr_reader :tileset_id
     attr_reader :width

@@ -1,4 +1,4 @@
-module Wolf
+module WolfRpg
   class RouteCommand
     def self.create(file)
       # Read all data for this movement command from file

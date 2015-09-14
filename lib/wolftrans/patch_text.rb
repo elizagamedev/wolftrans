@@ -1,5 +1,5 @@
 require 'wolftrans/context'
-require 'wolf'
+require 'wolfrpg'
 
 require 'fileutils'
 require 'find'

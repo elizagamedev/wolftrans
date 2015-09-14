@@ -1,9 +1,9 @@
-require 'wolf/map'
-require 'wolf/game_dat'
-require 'wolf/database'
-require 'wolf/common_events'
+require 'wolfrpg/map'
+require 'wolfrpg/game_dat'
+require 'wolfrpg/database'
+require 'wolfrpg/common_events'
 
-module Wolf
+module WolfRpg
   # Find strings in binary string and return them inline in an array
   def self.parse_strings(data)
     result = []

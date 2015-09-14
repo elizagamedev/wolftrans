@@ -1,6 +1,6 @@
-require 'wolf/io'
+require 'wolfrpg/io'
 
-module Wolf
+module WolfRpg
   class GameDat
     attr_accessor :unknown1
     attr_accessor :title

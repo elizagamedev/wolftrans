@@ -1,5 +1,5 @@
 require 'wolftrans/context'
-require 'wolf'
+require 'wolfrpg'
 
 require 'fileutils'
 require 'find'
@@ -143,7 +143,7 @@ module WolfTrans
       map_name = File.basename(filename, '.*')
       patch_filename = "dump/mps/#{map_name}.txt"
 
-      map = Wolf::Map.new(filename)
+      map = WolfRpg::Map.new(filename)
       map.events.each do |event|
         event.pages.each do |page|
           page.commands.each_with_index do |command, cmd_index|
@@ -159,7 +159,7 @@ module WolfTrans
 
     def load_game_dat(filename)
       patch_filename = 'dump/GameDat.txt'
-      @game_dat = Wolf::GameDat.new(filename)
+      @game_dat = WolfRpg::GameDat.new(filename)
       unless @game_dat.title.empty?
         @strings[@game_dat.title][Context::GameDat.from_data('Title')] = Translation.new(patch_filename)
       end
@@ -179,7 +179,7 @@ module WolfTrans
     end
 
     def load_game_database(project_filename, dat_filename)
-      db = Wolf::Database.new(project_filename, dat_filename)
+      db = WolfRpg::Database.new(project_filename, dat_filename)
       db.types.each_with_index do |type, type_index|
         next if type.name.empty?
         patch_filename = "dump/db/#{db.name}/#{WolfTrans.escape_path(type.name)}.txt"
@@ -194,7 +194,7 @@ module WolfTrans
     end
 
     def load_common_events(filename)
-      @common_events = Wolf::CommonEvents.new(filename)
+      @common_events = WolfRpg::CommonEvents.new(filename)
       @common_events.events.each do |event|
         patch_filename = "dump/common/#{'%03d' % event.id}_#{WolfTrans.escape_path(event.name)}.txt"
         event.commands.each_with_index do |command, cmd_index|
@@ -208,19 +208,19 @@ module WolfTrans
 
     def strings_of_command(command)
       case command
-      when Wolf::Command::Message
+      when WolfRpg::Command::Message
         yield command.text unless command.text.empty?
-      when Wolf::Command::Choices
+      when WolfRpg::Command::Choices
         command.text.each do |s|
           yield s
         end
-      when Wolf::Command::StringCondition
+      when WolfRpg::Command::StringCondition
         command.string_args.each do |s|
           yield s unless s.empty?
         end
-      when Wolf::Command::SetString
+      when WolfRpg::Command::SetString
         yield command.text unless command.text.empty?
-      when Wolf::Command::Picture
+      when WolfRpg::Command::Picture
         if command.type == :text
           yield command.text unless command.text.empty?
         end
@@ -229,28 +229,28 @@ module WolfTrans
 
     def patch_command(command, context)
       case command
-      when Wolf::Command::Message
+      when WolfRpg::Command::Message
         yield_translation(command.text, context) do |str|
           command.text = str
         end
-      when Wolf::Command::Choices
+      when WolfRpg::Command::Choices
         command.text.each_with_index do |text, i|
           yield_translation(text, context) do |str|
             command.text[i] = str
           end
         end
-      when Wolf::Command::StringCondition
+      when WolfRpg::Command::StringCondition
         command.string_args.each_with_index do |arg, i|
           next if arg.empty?
           yield_translation(arg, context) do |str|
             command.string_args[i] = str
           end
         end
-      when Wolf::Command::SetString
+      when WolfRpg::Command::SetString
         yield_translation(command.text, context) do |str|
           command.text = str
         end
-      when Wolf::Command::Picture
+      when WolfRpg::Command::Picture
         if command.type == :text
           yield_translation(command.text, context) do |str|
             command.text = str
