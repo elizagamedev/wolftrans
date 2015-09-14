@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+$:.unshift(File.dirname(__FILE__) + '/../lib')
+require 'wolftrans'
+
+if ARGV.size != 3
+  STDERR.puts "usage: wolftrans game_dir patch_dir out_dir"
+  exit 1
+end
+
+patch = WolfTrans::Patch.new(ARGV[0], ARGV[1])
+patch.apply(ARGV[2])
