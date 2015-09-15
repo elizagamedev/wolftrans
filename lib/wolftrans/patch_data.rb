@@ -63,6 +63,7 @@ module WolfTrans
       FileUtils.mkdir_p("#{out_data_dir}/MapData")
       @maps.each do |map_name, map|
         map.events.each do |event|
+          next unless event
           event.pages.each do |page|
             page.commands.each_with_index do |command, cmd_index|
               context = Context::MapEvent.from_data(map_name, event, page, cmd_index, command)
@@ -110,6 +111,7 @@ module WolfTrans
         'BattleEffect',
         'CharaChip',
         'EnemyGraphic',
+        'Fog',
         'Fog_BackGround',
         'MapChip',
         'Picture',
@@ -145,6 +147,7 @@ module WolfTrans
 
       map = WolfRpg::Map.new(filename)
       map.events.each do |event|
+        next unless event
         event.pages.each do |page|
           page.commands.each_with_index do |command, cmd_index|
             strings_of_command(command) do |string|
@@ -314,7 +317,6 @@ module WolfTrans
 
     def copy_data_files_from(src_data_dir, out_data_dir, dirname, extensions)
       out_dir = File.join(out_data_dir, dirname)
-      FileUtils.mkdir_p(out_dir)
 
       Find.find(src_data_dir) do |path|
         if dirname.empty?
@@ -334,7 +336,9 @@ module WolfTrans
         next unless extensions.include? File.extname(basename)[1..-1]
         next if @file_blacklist.include? "data/#{dirname.downcase}/#{basename.downcase}"
         out_name = "#{out_dir}/#{basename}"
-        FileUtils.cp(path, out_name) unless File.exist? out_name
+        next if File.exist? out_name
+        FileUtils.mkdir_p(out_dir)
+        FileUtils.cp(path, out_name)
       end
     end
   end

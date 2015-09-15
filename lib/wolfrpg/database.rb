@@ -157,17 +157,13 @@ module WolfRpg
       def read_dat(file)
         IO.verify(file, DAT_TYPE_SEPARATOR)
         @unknown1 = IO.read_int(file)
-        num_fields = IO.read_int(file)
-        unless num_fields == @fields.size
-          raise "database project and dat Field count mismatch (#{@fields.size} vs. #{num_fields})"
-        end
+        fields_size = IO.read_int(file)
+        @fields = @fields[0, fields_size] if fields_size != @fields.size
         @fields.each do |field|
           field.read_dat(file)
         end
-        num_data = IO.read_int(file)
-        unless num_data == @data.size
-          raise "database project and dat Field count mismatch (#{@data.size} vs. #{num_data})"
-        end
+        data_size = IO.read_int(file)
+        @data = @data[0, data_size] if data_size != @data.size
         @data.each do |datum|
           datum.read_dat(file, @fields)
         end

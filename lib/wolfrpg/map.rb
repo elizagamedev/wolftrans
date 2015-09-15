@@ -51,6 +51,7 @@ module WolfRpg
         IO.write_int(file, @events.size)
         IO.write(file, @tiles)
         @events.each do |event|
+          next unless event
           IO.write_byte(file, 0x6F)
           event.dump(file)
         end

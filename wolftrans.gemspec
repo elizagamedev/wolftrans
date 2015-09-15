@@ -1,7 +1,7 @@
 # coding: utf-8
 Gem::Specification.new do |s|
   s.name          = 'wolftrans'
-  s.version       = '0.0.1'
+  s.version       = '0.0.2'
   s.date          = '2015-09-14'
   s.summary       = 'A utility to translate Wolf RPG Editor games'
   s.description   = s.summary
