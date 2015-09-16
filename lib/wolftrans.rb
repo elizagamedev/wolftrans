@@ -1,6 +1,9 @@
+require 'wolftrans/util.rb'
+
 require 'wolftrans/patch_text'
 require 'wolftrans/patch_data'
-require 'wolfrpg'
+
+require 'wolftrans/debug.rb'
 
 module WolfTrans
   class Patch
@@ -98,69 +101,6 @@ module WolfTrans
       end
       # Convert Windows newlines and return
       text.gsub(/\r\n?/, "\n")
-    end
-  end
-
-  #####################
-  # Utility functions #
-
-  # Sanitize a path; i.e., standardize path separators remove trailing separator
-  def self.sanitize_path(path)
-    if File::ALT_SEPARATOR
-      path = path.gsub(File::ALT_SEPARATOR, '/')
-    end
-    path.sub(/\/$/, '')
-  end
-
-  # Get the name of a path case-insensitively
-  def self.join_path_nocase(parent, child)
-    child_case = Dir.entries(parent).select { |e| e.downcase == child }.first
-    return nil unless child_case
-    return "#{parent}/#{child_case}"
-  end
-
-  # Strip all leading/trailing whitespace, including fullwidth spaces
-  def self.full_strip(str)
-    str.strip.sub(/^\u{3000}*/, '').sub(/\u{3000}*$/, '')
-  end
-
-  # Escape a string for use as a path on the filesystem
-  # https://stackoverflow.com/questions/2270635/invalid-chars-filter-for-file-folder-name-ruby
-  def self.escape_path(path)
-    full_strip(path).gsub(/[\x00\/\\:\*\?\"<>\|]/, '_')
-  end
-
-  ###################
-  # Debug functions #
-  def self.grep(dir, needle)
-    Find.find(dir) do |path|
-      next if FileTest.directory? path
-
-      basename = File.basename(path)
-      basename_downcase = basename.downcase
-      basename_noext = File.basename(basename_downcase, '.*')
-      parent_path = File.dirname(path)
-      ext = File.extname(basename_downcase)
-
-      if ext.downcase == '.mps'
-        WolfRpg::Map.new(path).grep(needle)
-      elsif ext.downcase == '.project'
-        next if basename_downcase == 'sysdatabasebasic.project'
-        dat_filename = WolfTrans.join_path_nocase(parent_path, "#{basename_noext}.dat")
-        next if dat_filename == nil
-        WolfRpg::Database.new(path, dat_filename).grep(needle)
-      elsif basename_downcase == 'commonevent.dat'
-        WolfRpg::CommonEvents.new(path).grep(needle)
-      end
-    end
-  end
-
-  def self.grep_cid(dir, cid)
-    Find.find(dir) do |path|
-      next if FileTest.directory? path
-      if File.extname(path).downcase == '.mps'
-        WolfRpg::Map.new(path).grep_cid(cid)
-      end
     end
   end
 

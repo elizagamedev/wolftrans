@@ -27,8 +27,9 @@ Dir.entries(TEST_DIR).sort.each do |entry|
   Dir.mktmpdir do |tmpdir|
     patch_dir = "#{tmpdir}/patch"
     out_dir = "#{tmpdir}/out"
-    puts "==Attempting '#{entry}'"
+    puts "==Patching '#{entry}'"
     WolfTrans::Patch.new(path, patch_dir).apply(out_dir)
+    puts "==Running '#{entry}'"
     run_exe("#{out_dir}/Game.exe")
   end
 end

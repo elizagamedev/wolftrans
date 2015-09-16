@@ -9,11 +9,11 @@ require 'find'
 module WolfTrans
   class Patch
     def load_data(game_dir)
-      @game_dir = WolfTrans.sanitize_path(game_dir)
+      @game_dir = Util.sanitize_path(game_dir)
       unless Dir.exist? @game_dir
         raise "could not find game folder '#{@game_dir}'"
       end
-      @game_data_dir = WolfTrans.join_path_nocase(@game_dir, 'data')
+      @game_data_dir = Util.join_path_nocase(@game_dir, 'data')
       if @game_data_dir == nil
         raise "could not find data folder in '#{@game_dir}'"
       end
@@ -39,7 +39,7 @@ module WolfTrans
               load_game_dat(filename)
             elsif extension == '.project'
               next if basename_downcase == 'sysdatabasebasic.project'
-              dat_filename = WolfTrans.join_path_nocase(parent_path, "#{basename_noext}.dat")
+              dat_filename = Util.join_path_nocase(parent_path, "#{basename_noext}.dat")
               next if dat_filename == nil
               load_game_database(filename, dat_filename)
             elsif basename_downcase == 'commonevent.dat'
@@ -53,7 +53,7 @@ module WolfTrans
     # Apply the patch to the files in the game path and write them to the
     # output directory
     def apply(out_dir)
-      out_dir = WolfTrans.sanitize_path(out_dir)
+      out_dir = Util.sanitize_path(out_dir)
       out_data_dir = "#{out_dir}/Data"
 
       # Clear out directory
@@ -116,6 +116,7 @@ module WolfTrans
         'MapChip',
         'Picture',
         'SystemFile',
+        'SystemGraphic',
       ].each do |dirname|
         copy_data_files(out_data_dir, dirname, ['png','jpg','jpeg','bmp'])
       end
@@ -182,24 +183,25 @@ module WolfTrans
     end
 
     def load_game_database(project_filename, dat_filename)
+      db_name = File.basename(project_filename, '.*')
       db = WolfRpg::Database.new(project_filename, dat_filename)
       db.types.each_with_index do |type, type_index|
         next if type.name.empty?
-        patch_filename = "dump/db/#{db.name}/#{WolfTrans.escape_path(type.name)}.txt"
+        patch_filename = "dump/db/#{db_name}/#{Util.escape_path(type.name)}.txt"
         type.data.each_with_index do |datum, datum_index|
           datum.each_translatable do |str, field|
-            context = Context::Database.from_data(db.name, type_index, type, datum_index, datum, field)
+            context = Context::Database.from_data(db_name, type_index, type, datum_index, datum, field)
             @strings[str][context] ||= Translation.new(patch_filename)
           end
         end
       end
-      @databases[db.name] = db
+      @databases[db_name] = db
     end
 
     def load_common_events(filename)
       @common_events = WolfRpg::CommonEvents.new(filename)
       @common_events.events.each do |event|
-        patch_filename = "dump/common/#{'%03d' % event.id}_#{WolfTrans.escape_path(event.name)}.txt"
+        patch_filename = "dump/common/#{'%03d' % event.id}_#{Util.escape_path(event.name)}.txt"
         event.commands.each_with_index do |command, cmd_index|
           strings_of_command(command) do |string|
             @strings[string][Context::CommonEvent.from_data(event, cmd_index, command)] ||=

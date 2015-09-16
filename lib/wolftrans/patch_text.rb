@@ -9,7 +9,7 @@ module WolfTrans
     ######################
     # Loading Patch data #
     def load_patch(patch_dir)
-      @patch_dir = WolfTrans.sanitize_path(patch_dir)
+      @patch_dir = Util.sanitize_path(patch_dir)
       @patch_assets_dir = "#{@patch_dir}/Assets"
       @patch_strings_dir = "#{@patch_dir}/Patch"
 
@@ -19,7 +19,7 @@ module WolfTrans
       end
 
       # Find data dir
-      @patch_data_dir = WolfTrans.join_path_nocase(@patch_assets_dir, 'data')
+      @patch_data_dir = Util.join_path_nocase(@patch_assets_dir, 'data')
 
       # Load blacklist
       @file_blacklist = []

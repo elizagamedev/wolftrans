@@ -131,55 +131,55 @@ module WolfRpg
 
     public
     class Move < Command
-      def initialize(cid, args, string_args, indent, file)
+      def initialize(cid, args, string_args, indent, coder)
         super(cid, args, string_args, indent)
         # Read unknown data
         @unknown = Array.new(5)
         @unknown.each_index do |i|
-          @unknown[i] = IO.read_byte(file)
+          @unknown[i] = coder.read_byte
         end
         # Read known data
         #TODO further abstract this
-        @flags = IO.read_byte(file)
+        @flags = coder.read_byte
 
         # Read route
-        @route = Array.new(IO.read_int(file))
+        @route = Array.new(coder.read_int)
         @route.each_index do |i|
-          @route[i] = RouteCommand.create(file)
+          @route[i] = RouteCommand.create(coder)
         end
       end
 
-      def dump_terminator(file)
-        IO.write_byte(file, 1)
+      def dump_terminator(coder)
+        coder.write_byte(1)
         @unknown.each do |byte|
-          IO.write_byte(file, byte)
+          coder.write_byte(byte)
         end
-        IO.write_byte(file, @flags)
-        IO.write_int(file, @route.size)
+        coder.write_byte(@flags)
+        coder.write_int(@route.size)
         @route.each do |cmd|
-          cmd.dump(file)
+          cmd.dump(coder)
         end
       end
     end
 
     # Load from the file and create the appropriate class object
-    def self.create(file)
+    def self.create(coder)
       # Read all data for this command from file
-      args = Array.new(IO.read_byte(file) - 1)
-      cid = IO.read_int(file)
+      args = Array.new(coder.read_byte - 1)
+      cid = coder.read_int
       args.each_index do |i|
-        args[i] = IO.read_int(file)
+        args[i] = coder.read_int
       end
-      indent = IO.read_byte(file)
-      string_args = Array.new(IO.read_byte(file))
+      indent = coder.read_byte
+      string_args = Array.new(coder.read_byte)
       string_args.each_index do |i|
-        string_args[i] = IO.read_string(file)
+        string_args[i] = coder.read_string
       end
 
       # Read the move list if necessary
-      terminator = IO.read_byte(file)
+      terminator = coder.read_byte
       if terminator == 0x01
-        return Command::Move.new(cid, args, string_args, indent, file)
+        return Command::Move.new(cid, args, string_args, indent, coder)
       elsif terminator != 0x00
         raise "command terminator is an unexpected value (#{terminator})"
       end
@@ -188,19 +188,19 @@ module WolfRpg
       return CID_TO_CLASS[cid].new(cid, args, string_args, indent)
     end
 
-    def dump(file)
-      IO.write_byte(file, @args.size + 1)
-      IO.write_int(file, @cid)
+    def dump(coder)
+      coder.write_byte(@args.size + 1)
+      coder.write_int(@cid)
       @args.each do |arg|
-        IO.write_int(file, arg)
+        coder.write_int(arg)
       end
-      IO.write_byte(file, indent)
-      IO.write_byte(file, @string_args.size)
+      coder.write_byte(indent)
+      coder.write_byte(@string_args.size)
       @string_args.each do |arg|
-        IO.write_string(file, arg)
+        coder.write_string(arg)
       end
 
-      dump_terminator(file)
+      dump_terminator(coder)
     end
 
     private
@@ -211,8 +211,8 @@ module WolfRpg
       @indent = indent
     end
 
-    def dump_terminator(file)
-      IO.write_byte(file, 0)
+    def dump_terminator(coder)
+      coder.write_byte(0)
     end
   end
 end

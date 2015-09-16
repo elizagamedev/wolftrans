@@ -1,44 +1,42 @@
 module WolfRpg
   class Database
-    attr_accessor :name #DEBUG
     attr_accessor :types
 
     def initialize(project_filename, dat_filename)
-      @name = File.basename(project_filename, '.*')
-      File.open(project_filename, 'rb') do |file|
-        @types = Array.new(IO.read_int(file))
+      FileCoder.open(project_filename, :read) do |coder|
+        @types = Array.new(coder.read_int)
         @types.each_index do |i|
-          @types[i] = Type.new(file)
+          @types[i] = Type.new(coder)
         end
       end
-      File.open(dat_filename, 'rb') do |file|
-        IO.verify(file, DAT_MAGIC_NUMBER)
-        num_types = IO.read_int(file)
+      FileCoder.open(dat_filename, :read) do |coder|
+        coder.verify(DAT_MAGIC_NUMBER)
+        num_types = coder.read_int
         unless num_types == @types.size
           raise "database project and dat Type count mismatch (#{@types.size} vs. #{num_types})"
         end
         @types.each do |type|
-          type.read_dat(file)
+          type.read_dat(coder)
         end
-        if IO.read_byte(file) != 0xC1
+        if coder.read_byte != 0xC1
           STDERR.puts "warning: no C1 terminator at the end of '#{dat_filename}'"
         end
       end
 
       def dump(project_filename, dat_filename)
-        File.open(project_filename, 'wb') do |file|
-          IO.write_int(file, @types.size)
+        FileCoder.open(project_filename, :write) do |coder|
+          coder.write_int(@types.size)
           @types.each do |type|
-            type.dump_project(file)
+            type.dump_project(coder)
           end
         end
-        File.open(dat_filename, 'wb') do |file|
-          IO.write(file, DAT_MAGIC_NUMBER)
-          IO.write_int(file, @types.size)
+        FileCoder.open(dat_filename, :write) do |coder|
+          coder.write(DAT_MAGIC_NUMBER)
+          coder.write_int(@types.size)
           @types.each do |type|
-            type.dump_dat(file)
+            type.dump_dat(coder)
           end
-          IO.write_byte(file, 0xC1)
+          coder.write_byte(0xC1)
         end
       end
 
@@ -47,7 +45,7 @@ module WolfRpg
           type.data.each_with_index do |datum, datum_index|
             datum.each_translatable do |value, field|
               next unless value =~ needle
-              puts "DB:#{@name}/[#{type_index}]#{type.name}/[#{datum_index}]#{datum.name}/[#{field.index}]#{field.name}"
+              puts "DB:[#{type_index}]#{type.name}/[#{datum_index}]#{datum.name}/[#{field.index}]#{field.name}"
               puts "\t" + value
             end
           end
@@ -63,122 +61,122 @@ module WolfRpg
       attr_accessor :unknown1
 
       # Initialize from project file IO
-      def initialize(file)
-        @name = IO.read_string(file)
-        @fields = Array.new(IO.read_int(file))
+      def initialize(coder)
+        @name = coder.read_string
+        @fields = Array.new(coder.read_int)
         @fields.each_index do |i|
-          @fields[i] = Field.new(file)
+          @fields[i] = Field.new(coder)
         end
-        @data = Array.new(IO.read_int(file))
+        @data = Array.new(coder.read_int)
         @data.each_index do |i|
-          @data[i] = Data.new(file)
+          @data[i] = Data.new(coder)
         end
-        @description = IO.read_string(file)
+        @description = coder.read_string
 
         # Add misc data to fields. It's separated for some reason.
 
         # This appears to always be 0x64, but save it anyway
-        @field_type_list_size = IO.read_int(file)
+        @field_type_list_size = coder.read_int
         index = 0
         while index < @fields.size
-          @fields[index].type = IO.read_byte(file)
+          @fields[index].type = coder.read_byte
           index += 1
         end
-        file.seek(@field_type_list_size - index, :CUR)
+        coder.skip(@field_type_list_size - index)
 
-        IO.read_int(file).times do |i|
-          @fields[i].unknown1 = IO.read_string(file)
+        coder.read_int.times do |i|
+          @fields[i].unknown1 = coder.read_string
         end
-        IO.read_int(file).times do |i|
-          @fields[i].string_args = Array.new(IO.read_int(file))
+        coder.read_int.times do |i|
+          @fields[i].string_args = Array.new(coder.read_int)
           @fields[i].string_args.each_index do |j|
-            @fields[i].string_args[j] = IO.read_string(file)
+            @fields[i].string_args[j] = coder.read_string
           end
         end
-        IO.read_int(file).times do |i|
-          @fields[i].args = Array.new(IO.read_int(file))
+        coder.read_int.times do |i|
+          @fields[i].args = Array.new(coder.read_int)
           @fields[i].args.each_index do |j|
-            @fields[i].args[j] = IO.read_int(file)
+            @fields[i].args[j] = coder.read_int
           end
         end
-        IO.read_int(file).times do |i|
-          @fields[i].default_value = IO.read_int(file)
+        coder.read_int.times do |i|
+          @fields[i].default_value = coder.read_int
         end
       end
 
-      def dump_project(file)
-        IO.write_string(file, @name)
-        IO.write_int(file, @fields.size)
+      def dump_project(coder)
+        coder.write_string(@name)
+        coder.write_int(@fields.size)
         @fields.each do |field|
-          field.dump_project(file)
+          field.dump_project(coder)
         end
-        IO.write_int(file, @data.size)
+        coder.write_int(@data.size)
         @data.each do |datum|
-          datum.dump_project(file)
+          datum.dump_project(coder)
         end
-        IO.write_string(file, @description)
+        coder.write_string(@description)
 
         # Dump misc field data
-        IO.write_int(file, @field_type_list_size)
+        coder.write_int(@field_type_list_size)
         index = 0
         while index < @fields.size
-          IO.write_byte(file, @fields[index].type)
+          coder.write_byte(@fields[index].type)
           index += 1
         end
         while index < @field_type_list_size
-          IO.write_byte(file, 0)
+          coder.write_byte(0)
           index += 1
         end
-        IO.write_int(file, @fields.size)
+        coder.write_int(@fields.size)
         @fields.each do |field|
-          IO.write_string(file, field.unknown1)
+          coder.write_string(field.unknown1)
         end
-        IO.write_int(file, @fields.size)
+        coder.write_int(@fields.size)
         @fields.each do |field|
-          IO.write_int(file, field.string_args.size)
+          coder.write_int(field.string_args.size)
           field.string_args.each do |arg|
-            IO.write_string(file, arg)
+            coder.write_string(arg)
           end
         end
-        IO.write_int(file, @fields.size)
+        coder.write_int(@fields.size)
         @fields.each do |field|
-          IO.write_int(file, field.args.size)
+          coder.write_int(field.args.size)
           field.args.each do |arg|
-            IO.write_int(file, arg)
+            coder.write_int(arg)
           end
         end
-        IO.write_int(file, @fields.size)
+        coder.write_int(@fields.size)
         @fields.each do |field|
-          IO.write_int(file, field.default_value)
+          coder.write_int(field.default_value)
         end
       end
 
       # Read the rest of the data from the dat file
-      def read_dat(file)
-        IO.verify(file, DAT_TYPE_SEPARATOR)
-        @unknown1 = IO.read_int(file)
-        fields_size = IO.read_int(file)
+      def read_dat(coder)
+        coder.verify(DAT_TYPE_SEPARATOR)
+        @unknown1 = coder.read_int
+        fields_size = coder.read_int
         @fields = @fields[0, fields_size] if fields_size != @fields.size
         @fields.each do |field|
-          field.read_dat(file)
+          field.read_dat(coder)
         end
-        data_size = IO.read_int(file)
+        data_size = coder.read_int
         @data = @data[0, data_size] if data_size != @data.size
         @data.each do |datum|
-          datum.read_dat(file, @fields)
+          datum.read_dat(coder, @fields)
         end
       end
 
-      def dump_dat(file)
-        IO.write(file, DAT_TYPE_SEPARATOR)
-        IO.write_int(file, @unknown1)
-        IO.write_int(file, @fields.size)
+      def dump_dat(coder)
+        coder.write(DAT_TYPE_SEPARATOR)
+        coder.write_int(@unknown1)
+        coder.write_int(@fields.size)
         @fields.each do |field|
-          field.dump_dat(file)
+          field.dump_dat(coder)
         end
-        IO.write_int(file, @data.size)
+        coder.write_int(@data.size)
         @data.each do |datum|
-          datum.dump_dat(file)
+          datum.dump_dat(coder)
         end
       end
     end
@@ -193,20 +191,20 @@ module WolfRpg
       attr_accessor :default_value
       attr_accessor :indexinfo
 
-      def initialize(file)
-        @name = IO.read_string(file)
+      def initialize(coder)
+        @name = coder.read_string
       end
 
-      def dump_project(file)
-        IO.write_string(file, @name)
+      def dump_project(coder)
+        coder.write_string(@name)
       end
 
-      def read_dat(file)
-        @indexinfo = IO.read_int(file)
+      def read_dat(coder)
+        @indexinfo = coder.read_int
       end
 
-      def dump_dat(file)
-        IO.write_int(file, @indexinfo)
+      def dump_dat(coder)
+        coder.write_int(@indexinfo)
       end
 
       def string?
@@ -234,33 +232,33 @@ module WolfRpg
       attr_accessor :int_values
       attr_accessor :string_values
 
-      def initialize(file)
-        @name = IO.read_string(file)
+      def initialize(coder)
+        @name = coder.read_string
       end
 
-      def dump_project(file)
-        IO.write_string(file, @name)
+      def dump_project(coder)
+        coder.write_string(@name)
       end
 
-      def read_dat(file, fields)
+      def read_dat(coder, fields)
         @fields = fields
         @int_values = Array.new(fields.select(&:int?).size)
         @string_values = Array.new(fields.select(&:string?).size)
 
         @int_values.each_index do |i|
-          @int_values[i] = IO.read_int(file)
+          @int_values[i] = coder.read_int
         end
         @string_values.each_index do |i|
-          @string_values[i] = IO.read_string(file)
+          @string_values[i] = coder.read_string
         end
       end
 
-      def dump_dat(file)
+      def dump_dat(coder)
         @int_values.each do |i|
-          IO.write_int(file, i)
+          coder.write_int(i)
         end
         @string_values.each do |i|
-          IO.write_string(file, i)
+          coder.write_string(i)
         end
       end
 

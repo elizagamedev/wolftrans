@@ -146,11 +146,11 @@ module WolfTrans
       def initialize(db_name, type_index, type_name, datum_index, datum_name, field_index, field_name)
         @db_name = db_name
         @type_index = type_index
-        @type_name = WolfTrans.full_strip(type_name)
+        @type_name = Util.full_strip(type_name)
         @datum_index = datum_index
-        @datum_name = WolfTrans.full_strip(datum_name)
+        @datum_name = Util.full_strip(datum_name)
         @field_index = field_index
-        @field_name = WolfTrans.full_strip(field_name)
+        @field_name = Util.full_strip(field_name)
       end
 
       def eql?(other)

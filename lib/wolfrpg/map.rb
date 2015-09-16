@@ -1,7 +1,3 @@
-require 'wolfrpg/io'
-require 'wolfrpg/route'
-require 'wolfrpg/command'
-
 module WolfRpg
   class Map
     attr_reader :tileset_id
@@ -14,48 +10,48 @@ module WolfRpg
 
     def initialize(filename)
       @filename = File.basename(filename, '.*')
-      File.open(filename, 'rb') do |file|
-        IO.verify(file, MAGIC_NUMBER)
+      FileCoder.open(filename, :read) do |coder|
+        coder.verify(MAGIC_NUMBER)
 
-        @tileset_id = IO.read_int(file)
+        @tileset_id = coder.read_int
 
         # Read basic data
-        @width = IO.read_int(file)
-        @height = IO.read_int(file)
-        @events = Array.new(IO.read_int(file))
+        @width = coder.read_int
+        @height = coder.read_int
+        @events = Array.new(coder.read_int)
 
         # Read tiles
         #TODO: interpret this data later
-        @tiles = IO.read(file, @width * @height * 3 * 4)
+        @tiles = coder.read(@width * @height * 3 * 4)
 
         # Read events
-        while (indicator = IO.read_byte(file)) == 0x6F
-          event = Event.new(file)
+        while (indicator = coder.read_byte) == 0x6F
+          event = Event.new(coder)
           @events[event.id] = event
         end
         if indicator != 0x66
           raise "unexpected event indicator: #{indicator.to_s(16)}"
         end
-        unless file.eof?
+        unless coder.eof?
           raise "file not fully parsed"
         end
       end
     end
 
     def dump(filename)
-      File.open(filename, 'wb') do |file|
-        IO.write(file, MAGIC_NUMBER)
-        IO.write_int(file, @tileset_id)
-        IO.write_int(file, @width)
-        IO.write_int(file, @height)
-        IO.write_int(file, @events.size)
-        IO.write(file, @tiles)
+      FileCoder.open(filename, :write) do |coder|
+        coder.write(MAGIC_NUMBER)
+        coder.write_int(@tileset_id)
+        coder.write_int(@width)
+        coder.write_int(@height)
+        coder.write_int(@events.size)
+        coder.write(@tiles)
         @events.each do |event|
           next unless event
-          IO.write_byte(file, 0x6F)
-          event.dump(file)
+          coder.write_byte(0x6F)
+          event.dump(coder)
         end
-        IO.write_byte(file, 0x66)
+        coder.write_byte(0x66)
       end
     end
 
@@ -94,19 +90,19 @@ module WolfRpg
       attr_accessor :y
       attr_accessor :pages
 
-      def initialize(file)
-        IO.verify(file, MAGIC_NUMBER1)
-        @id = IO.read_int(file)
-        @name = IO.read_string(file)
-        @x = IO.read_int(file)
-        @y = IO.read_int(file)
-        @pages = Array.new(IO.read_int(file))
-        IO.verify(file, MAGIC_NUMBER2)
+      def initialize(coder)
+        coder.verify(MAGIC_NUMBER1)
+        @id = coder.read_int
+        @name = coder.read_string
+        @x = coder.read_int
+        @y = coder.read_int
+        @pages = Array.new(coder.read_int)
+        coder.verify(MAGIC_NUMBER2)
 
         # Read pages
         page_id = 0
-        while (indicator = IO.read_byte(file)) == 0x79
-          page = Page.new(file, page_id)
+        while (indicator = coder.read_byte) == 0x79
+          page = Page.new(coder, page_id)
           @pages[page_id] = page
           page_id += 1
         end
@@ -115,21 +111,21 @@ module WolfRpg
         end
       end
 
-      def dump(file)
-        IO.write(file, MAGIC_NUMBER1)
-        IO.write_int(file, @id)
-        IO.write_string(file, @name)
-        IO.write_int(file, @x)
-        IO.write_int(file, @y)
-        IO.write_int(file, @pages.size)
-        IO.write(file, MAGIC_NUMBER2)
+      def dump(coder)
+        coder.write(MAGIC_NUMBER1)
+        coder.write_int(@id)
+        coder.write_string(@name)
+        coder.write_int(@x)
+        coder.write_int(@y)
+        coder.write_int(@pages.size)
+        coder.write(MAGIC_NUMBER2)
 
         # Write pages
         @pages.each do |page|
-          IO.write_byte(file, 0x79)
-          page.dump(file)
+          coder.write_byte(0x79)
+          page.dump(coder)
         end
-        IO.write_byte(file, 0x70)
+        coder.write_byte(0x70)
       end
 
       class Page
@@ -150,77 +146,77 @@ module WolfRpg
         attr_accessor :collision_width
         attr_accessor :collision_height
 
-        def initialize(file, id)
+        def initialize(coder, id)
           @id = id
 
           #TODO ???
-          @unknown1 = IO.read_int(file)
+          @unknown1 = coder.read_int
 
           #TODO further abstract graphics options
-          @graphic_name = IO.read_string(file)
-          @graphic_direction = IO.read_byte(file)
-          @graphic_frame = IO.read_byte(file)
-          @graphic_opacity = IO.read_byte(file)
-          @graphic_render_mode = IO.read_byte(file)
+          @graphic_name = coder.read_string
+          @graphic_direction = coder.read_byte
+          @graphic_frame = coder.read_byte
+          @graphic_opacity = coder.read_byte
+          @graphic_render_mode = coder.read_byte
 
           #TODO parse conditions later
-          @conditions = IO.read(file, 1 + 4 + 4*4 + 4*4)
+          @conditions = coder.read(1 + 4 + 4*4 + 4*4)
           #TODO parse movement options later
-          @movement = IO.read(file, 4)
+          @movement = coder.read(4)
 
           #TODO further abstract flags
-          @flags = IO.read_byte(file)
+          @flags = coder.read_byte
 
           #TODO further abstract flags
-          @route_flags = IO.read_byte(file)
+          @route_flags = coder.read_byte
 
           # Parse move route
-          @route = Array.new(IO.read_int(file))
+          @route = Array.new(coder.read_int)
           @route.each_index do |i|
-            @route[i] = RouteCommand.create(file)
+            @route[i] = RouteCommand.create(coder)
           end
 
           # Parse commands
-          @commands = Array.new(IO.read_int(file))
+          @commands = Array.new(coder.read_int)
           @commands.each_index do |i|
-            @commands[i] = Command.create(file)
+            @commands[i] = Command.create(coder)
           end
-          IO.verify(file, COMMANDS_TERMINATOR)
+          coder.verify(COMMANDS_TERMINATOR)
 
           #TODO abstract these options later
-          @shadow_graphic_num = IO.read_byte(file)
-          @collision_width = IO.read_byte(file)
-          @collision_height = IO.read_byte(file)
+          @shadow_graphic_num = coder.read_byte
+          @collision_width = coder.read_byte
+          @collision_height = coder.read_byte
 
-          if (terminator = IO.read_byte(file)) != 0x7A
+          if (terminator = coder.read_byte) != 0x7A
             raise "page terminator not 7A (found #{terminator.to_s(16)})"
           end
         end
 
-        def dump(file)
-          IO.write_int(file, @unknown1)
-          IO.write_string(file, @graphic_name)
-          IO.write_byte(file, @graphic_direction)
-          IO.write_byte(file, @graphic_frame)
-          IO.write_byte(file, @graphic_opacity)
-          IO.write_byte(file, @graphic_render_mode)
-          IO.write(file, @conditions)
-          IO.write(file, @movement)
-          IO.write_byte(file, @flags)
-          IO.write_byte(file, @route_flags)
-          IO.write_int(file, @route.size)
+        def dump(coder)
+          coder.write_int(@unknown1)
+          coder.write_string(@graphic_name)
+          coder.write_byte(@graphic_direction)
+          coder.write_byte(@graphic_frame)
+          coder.write_byte(@graphic_opacity)
+          coder.write_byte(@graphic_render_mode)
+          coder.write(@conditions)
+          coder.write(@movement)
+          coder.write_byte(@flags)
+          coder.write_byte(@route_flags)
+          coder.write_int(@route.size)
           @route.each do |cmd|
-            cmd.dump(file)
+            cmd.dump(coder)
           end
-          IO.write_int(file, @commands.size)
+          coder.write_int(@commands.size)
           @commands.each do |cmd|
-            cmd.dump(file)
+            cmd.dump(coder)
           end
-          IO.write(file, COMMANDS_TERMINATOR)
-          IO.write_byte(file, @shadow_graphic_num)
-          IO.write_byte(file, @collision_width)
-          IO.write_byte(file, @collision_height)
-          IO.write_byte(file, 0x7A)
+          coder.write(COMMANDS_TERMINATOR)
+          coder.write_byte(@shadow_graphic_num)
+          coder.write_byte(@collision_width)
+          coder.write_byte(@collision_height)
+          coder.write_byte(0x7A)
         end
 
         COMMANDS_TERMINATOR = [

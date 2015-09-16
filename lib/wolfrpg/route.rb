@@ -1,25 +1,25 @@
 module WolfRpg
   class RouteCommand
-    def self.create(file)
+    def self.create(coder)
       # Read all data for this movement command from file
-      id = IO.read_byte(file)
-      args = Array.new(IO.read_byte(file))
+      id = coder.read_byte
+      args = Array.new(coder.read_byte)
       args.each_index do |i|
-        args[i] = IO.read_int(file)
+        args[i] = coder.read_int
       end
-      IO.verify(file, TERMINATOR)
+      coder.verify(TERMINATOR)
 
       #TODO Create proper route command
       return RouteCommand.new(id, args)
     end
 
-    def dump(file)
-      IO.write_byte(file, @id)
-      IO.write_byte(file, @args.size)
+    def dump(coder)
+      coder.write_byte(@id)
+      coder.write_byte(@args.size)
       @args.each do |arg|
-        IO.write_int(file, arg)
+        coder.write_int(arg)
       end
-      IO.write(file, TERMINATOR)
+      coder.write(TERMINATOR)
     end
 
     attr_accessor :id
