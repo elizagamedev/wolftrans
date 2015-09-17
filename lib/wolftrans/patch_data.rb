@@ -36,6 +36,7 @@ module WolfTrans
             load_map(filename) if extension == '.mps'
           when 'basicdata'
             if basename_downcase == 'game.dat'
+              @game_dat_filename = 'Data/BasicData/Game.dat'
               load_game_dat(filename)
             elsif extension == '.project'
               next if basename_downcase == 'sysdatabasebasic.project'
@@ -45,6 +46,17 @@ module WolfTrans
             elsif basename_downcase == 'commonevent.dat'
               load_common_events(filename)
             end
+          end
+        end
+      end
+
+      # Game.dat is in a different place on older versions
+      unless @game_dat
+        Dir.entries(@game_dir).each do |entry|
+          if entry.downcase == 'game.dat'
+            @game_dat_filename = 'Game.dat'
+            load_game_dat("#{@game_dir}/#{entry}")
+            break
           end
         end
       end
@@ -58,9 +70,10 @@ module WolfTrans
 
       # Clear out directory
       FileUtils.rm_rf(out_dir)
+      FileUtils.mkdir_p("#{out_data_dir}/BasicData")
+      FileUtils.mkdir_p("#{out_data_dir}/MapData")
 
       # Patch all the maps and dump them
-      FileUtils.mkdir_p("#{out_data_dir}/MapData")
       @maps.each do |map_name, map|
         map.events.each do |event|
           next unless event
@@ -75,7 +88,6 @@ module WolfTrans
       end
 
       # Patch the databases
-      FileUtils.mkdir_p("#{out_data_dir}/BasicData")
       @databases.each do |db_name, db|
         db.types.each_with_index do |type, type_index|
           next if type.name.empty?
@@ -102,9 +114,8 @@ module WolfTrans
       @common_events.dump("#{out_data_dir}/BasicData/CommonEvent.dat")
 
       # Patch Game.dat
-      FileUtils.mkdir_p("#{out_data_dir}/BasicData")
       patch_game_dat
-      @game_dat.dump("#{out_data_dir}/BasicData/Game.dat")
+      @game_dat.dump("#{out_dir}/#{@game_dat_filename}")
 
       # Copy image files
       [

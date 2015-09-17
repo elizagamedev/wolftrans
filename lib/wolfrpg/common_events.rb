@@ -87,7 +87,8 @@ module WolfRpg
           raise "expected 0x91, got 0x#{indicator.to_s(16)}"
         end
         @unknown9 = coder.read_string
-        if (indicator = coder.read_byte) != 0x92
+        return if (indicator = coder.read_byte) == 0x91
+        unless indicator == 0x92
           raise "expected 0x92, got 0x#{indicator.to_s(16)}"
         end
         @unknown10 = coder.read_string
@@ -138,10 +139,14 @@ module WolfRpg
         end
         coder.write_byte(0x91)
         coder.write_string(@unknown9)
-        coder.write_byte(0x92)
-        coder.write_string(@unknown10)
-        coder.write_int(@unknown12)
-        coder.write_byte(0x92)
+        if @unknown10
+          coder.write_byte(0x92)
+          coder.write_string(@unknown10)
+          coder.write_int(@unknown12)
+          coder.write_byte(0x92)
+        else
+          coder.write_byte(0x91)
+        end
       end
 
       private

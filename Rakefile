@@ -17,6 +17,10 @@ task :install => :build do
   system "gem install #{GEM_FILENAME}"
 end
 
+task :uninstall do
+  system "gem uninstall wolftrans --version #{WolfTrans::VERSION}"
+end
+
 task :clean do
   File.delete(GEM_FILENAME) if File.exist? GEM_FILENAME
 end

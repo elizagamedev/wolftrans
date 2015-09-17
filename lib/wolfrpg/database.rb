@@ -2,6 +2,12 @@ module WolfRpg
   class Database
     attr_accessor :types
 
+    def encrypted?
+      @crypt_header != nil
+    end
+
+    DAT_SEED_INDICES = [0, 3, 9]
+
     def initialize(project_filename, dat_filename)
       FileCoder.open(project_filename, :read) do |coder|
         @types = Array.new(coder.read_int)
@@ -9,8 +15,13 @@ module WolfRpg
           @types[i] = Type.new(coder)
         end
       end
-      FileCoder.open(dat_filename, :read) do |coder|
-        coder.verify(DAT_MAGIC_NUMBER)
+      FileCoder.open(dat_filename, :read, DAT_SEED_INDICES) do |coder|
+        if coder.encrypted?
+          @crypt_header = coder.crypt_header
+          @unknown_encrypted_1 = coder.read_byte
+        else
+          coder.verify(DAT_MAGIC_NUMBER)
+        end
         num_types = coder.read_int
         unless num_types == @types.size
           raise "database project and dat Type count mismatch (#{@types.size} vs. #{num_types})"
@@ -30,8 +41,12 @@ module WolfRpg
             type.dump_project(coder)
           end
         end
-        FileCoder.open(dat_filename, :write) do |coder|
-          coder.write(DAT_MAGIC_NUMBER)
+        FileCoder.open(dat_filename, :write, DAT_SEED_INDICES, @crypt_header) do |coder|
+          if encrypted?
+            coder.write_byte(@unknown_encrypted_1)
+          else
+            coder.write(DAT_MAGIC_NUMBER)
+          end
           coder.write_int(@types.size)
           @types.each do |type|
             type.dump_dat(coder)
@@ -300,7 +315,7 @@ module WolfRpg
     end
 
     DAT_MAGIC_NUMBER = [
-      0x00, 0x57, 0x00, 0x00, 0x4F, 0x4C, 0x00, 0x46, 0x4D, 0x00, 0xC1
+      0x57, 0x00, 0x00, 0x4F, 0x4C, 0x00, 0x46, 0x4D, 0x00, 0xC1
     ].pack('C*')
     DAT_TYPE_SEPARATOR = [
       0xFE, 0xFF, 0xFF, 0xFF
