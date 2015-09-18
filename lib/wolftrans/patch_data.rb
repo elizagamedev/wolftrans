@@ -298,9 +298,8 @@ module WolfTrans
     def yield_translation(string, context)
       return unless Util.translatable? string
       if @strings.include? string
-        unless @strings[string][context].string
-          yield @strings[string][context].string
-        end
+        str = @strings[string][context].string
+        yield str if Util.translatable? str
       end
     end
 
