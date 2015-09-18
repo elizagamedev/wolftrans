@@ -1,5 +1,7 @@
 require 'wolfrpg/route'
 
+# Special thanks to vgperson for mapping most of these command IDs out.
+
 module WolfRpg
   class Command
     attr_reader :cid
@@ -11,6 +13,9 @@ module WolfRpg
     # Command class definitions #
 
     class Blank < Command
+    end
+
+    class Checkpoint < Command
     end
 
     class Message < Command
@@ -34,13 +39,25 @@ module WolfRpg
       end
     end
 
+    class ForceStopMessage < Command
+    end
+
     class DebugMessage < Command
       def text
         @string_args[0]
       end
     end
 
+    class ClearDebugText < Command
+    end
+
+    class VariableCondition < Command
+    end
+
     class StringCondition < Command
+    end
+
+    class SetVariable < Command
     end
 
     class SetString < Command
@@ -55,6 +72,24 @@ module WolfRpg
       def text=(value)
         @string_args[0] = value
       end
+    end
+
+    class InputKey < Command
+    end
+
+    class SetVariableEx < Command
+    end
+
+    class AutoInput < Command
+    end
+
+    class BanInput < Command
+    end
+
+    class Teleport < Command
+    end
+
+    class Sound < Command
     end
 
     class Picture < Command
@@ -111,25 +146,51 @@ module WolfRpg
       end
     end
 
-    #class
+    class ChangeColor < Command
+    end
 
-    private
-    ##########################
-    # Map of CIDs to classes #
+    class SetTransition < Command
+    end
 
-    CID_TO_CLASS = {
-      0   => Command::Blank,
-      101 => Command::Message,
-      102 => Command::Choices,
-      103 => Command::Comment,
-      106 => Command::DebugMessage,
-      112 => Command::StringCondition,
-      122 => Command::SetString,
-      150 => Command::Picture,
-    }
-    CID_TO_CLASS.default = Command
+    class PrepareTransition < Command
+    end
 
-    public
+    class ExecuteTransition < Command
+    end
+
+    class StartLoop < Command
+    end
+
+    class BreakLoop < Command
+    end
+
+    class BreakEvent < Command
+    end
+
+    class EraseEvent < Command
+    end
+
+    class ReturnToTitle < Command
+    end
+
+    class EndGame < Command
+    end
+
+    class LoopToStart < Command
+    end
+
+    class StopNonPic < Command
+    end
+
+    class ResumeNonPic < Command
+    end
+
+    class LoopTimes < Command
+    end
+
+    class Wait < Command
+    end
+
     class Move < Command
       def initialize(cid, args, string_args, indent, coder)
         super(cid, args, string_args, indent)
@@ -162,6 +223,155 @@ module WolfRpg
       end
     end
 
+    class WaitForMove < Command
+    end
+
+    class CommonEvent < Command
+    end
+
+    class CommonEventReserve < Command
+    end
+
+    class SetLabel < Command
+    end
+
+    class JumpLabel < Command
+    end
+
+    class SaveLoad < Command
+    end
+
+    class LoadGame < Command
+    end
+
+    class SaveGame < Command
+    end
+
+    class MoveDuringEventOn < Command
+    end
+
+    class MoveDuringEventOff < Command
+    end
+
+    class Chip < Command
+    end
+
+    class ChipSet < Command
+    end
+
+    class ChipOverwrite < Command
+    end
+
+    class Database < Command
+    end
+
+    class ImportDatabase < Command
+    end
+
+    class Party < Command
+    end
+
+    class MapEffect < Command
+    end
+
+    class ScrollScreen < Command
+    end
+
+    class Effect < Command
+    end
+
+    class CommonEventByName < Command
+    end
+
+    class ChoiceCase < Command
+    end
+
+    class SpecialChoiceCase < Command
+    end
+
+    class ElseCase < Command
+    end
+
+    class CancelCase < Command
+    end
+
+    class LoopEnd < Command
+    end
+
+    class BranchEnd < Command
+    end
+
+    #class
+
+    private
+    ##########################
+    # Map of CIDs to classes #
+
+    CID_TO_CLASS = {
+      0   => Command::Blank,
+      99  => Command::Checkpoint,
+      101 => Command::Message,
+      102 => Command::Choices,
+      103 => Command::Comment,
+      105 => Command::ForceStopMessage,
+      106 => Command::DebugMessage,
+      107 => Command::ClearDebugText,
+      111 => Command::VariableCondition,
+      112 => Command::StringCondition,
+      121 => Command::SetVariable,
+      122 => Command::SetString,
+      123 => Command::InputKey,
+      124 => Command::SetVariableEx,
+      125 => Command::AutoInput,
+      126 => Command::BanInput,
+      130 => Command::Teleport,
+      140 => Command::Sound,
+      150 => Command::Picture,
+      151 => Command::ChangeColor,
+      160 => Command::SetTransition,
+      161 => Command::PrepareTransition,
+      162 => Command::ExecuteTransition,
+      170 => Command::StartLoop,
+      171 => Command::BreakLoop,
+      172 => Command::BreakEvent,
+      173 => Command::EraseEvent,
+      174 => Command::ReturnToTitle,
+      175 => Command::EndGame,
+      176 => Command::StartLoop,
+      177 => Command::StopNonPic,
+      178 => Command::ResumeNonPic,
+      179 => Command::LoopTimes,
+      180 => Command::Wait,
+      201 => Command::Move, # special case
+      202 => Command::WaitForMove,
+      210 => Command::CommonEvent,
+      211 => Command::CommonEventReserve,
+      212 => Command::SetLabel,
+      213 => Command::JumpLabel,
+      220 => Command::SaveLoad,
+      221 => Command::LoadGame,
+      222 => Command::SaveGame,
+      230 => Command::MoveDuringEventOn,
+      231 => Command::MoveDuringEventOff,
+      240 => Command::Chip,
+      241 => Command::ChipSet,
+      250 => Command::Database,
+      251 => Command::ImportDatabase,
+      270 => Command::Party,
+      280 => Command::MapEffect,
+      281 => Command::ScrollScreen,
+      290 => Command::Effect,
+      300 => Command::CommonEventByName,
+      401 => Command::ChoiceCase,
+      402 => Command::SpecialChoiceCase,
+      420 => Command::ElseCase,
+      421 => Command::CancelCase,
+      498 => Command::LoopEnd,
+      499 => Command::BranchEnd
+    }
+    CID_TO_CLASS.default = Command
+
+    public
     # Load from the file and create the appropriate class object
     def self.create(coder)
       # Read all data for this command from file

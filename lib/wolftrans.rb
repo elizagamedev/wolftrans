@@ -83,27 +83,6 @@ module WolfTrans
     end
   end
 
-  # IO functions
-  module IO
-    def self.read_txt(filename)
-      # Read file into memory, forcing UTF-8 without BOM.
-      text = nil
-      File.open(filename, 'rb:UTF-8') do |file|
-        if text = file.read(3)
-          if text == "\xEF\xBB\xBF"
-            raise "UTF-8 BOM detected; refusing to read file"
-          end
-          text << file.read
-        else
-          STDERR.puts "warning: empty patch file '#{filename}'"
-          return ''
-        end
-      end
-      # Convert Windows newlines and return
-      text.gsub(/\r\n?/, "\n")
-    end
-  end
-
   # Latest patch version format that can be read
   TXT_VERSION = Version.new(major: 1, minor: 0)
 end

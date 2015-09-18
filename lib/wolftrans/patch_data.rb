@@ -64,6 +64,9 @@ module WolfTrans
 
     # Apply the patch to the files in the game path and write them to the
     # output directory
+    DATA_FILE_EXTENSIONS = ['png','jpg','jpeg','bmp','ogg',
+                            'mp3','wav','mid','midi',
+                            'dat','project','xxxxx']
     def apply(out_dir)
       out_dir = Util.sanitize_path(out_dir)
       out_data_dir = "#{out_dir}/Data"
@@ -117,39 +120,37 @@ module WolfTrans
       patch_game_dat
       @game_dat.dump("#{out_dir}/#{@game_dat_filename}")
 
-      # Copy image files
-      [
-        'BattleEffect',
-        'CharaChip',
-        'EnemyGraphic',
-        'Fog',
-        'Fog_BackGround',
-        'MapChip',
-        'Picture',
-        'SystemFile',
-        'SystemGraphic',
-      ].each do |dirname|
-        copy_data_files(out_data_dir, dirname, ['png','jpg','jpeg','bmp'])
-      end
+      # Copy image/sound/music files
+      Dir.entries(@game_data_dir).each do |entry|
+        # Skip dot and dot-dot and non-directories
+        next if entry == '.' || entry == '..'
+        path = "#{@game_data_dir}/#{entry}"
+        next unless FileTest.directory? path
 
-      # Copy sound/music files
-      [
-        'BGM',
-        'SE',
-        'SystemFile',
-      ].each do |dirname|
-        copy_data_files(out_data_dir, dirname, ['ogg','mp3','wav','mid','midi'])
-      end
+        # Find the corresponding folder in the out dir
+        unless (out_path = Util.join_path_nocase(out_data_dir, entry))
+          out_path = "#{out_data_dir}/#{entry}"
+          FileUtils.mkdir_p(out_path)
+        end
 
-      # Copy BasicData
-      copy_data_files(out_data_dir, 'BasicData', ['dat','project','xxxxx','png'])
+        # Find the corresponding folder in the patch
+        if @patch_data_dir && (asset_entry = Util.join_path_nocase(@patch_data_dir, entry))
+          copy_data_files("#{@patch_data_dir}/#{asset_entry}", DATA_FILE_EXTENSIONS, out_path)
+        end
+
+        # Copy the original game files
+        copy_data_files(path, DATA_FILE_EXTENSIONS, out_path)
+      end
 
       # Copy fonts
-      copy_data_files(out_data_dir, '', ['ttf','ttc'])
+      if @patch_data_dir
+        copy_data_files(@patch_data_dir, ['ttf','ttc','otf'], out_data_dir)
+      end
+      copy_data_files(@game_data_dir, ['ttf','ttc','otf'], out_data_dir)
 
       # Copy remainder of files in the base patch/game dirs
-      copy_files(@patch_assets_dir, @patch_data_dir, out_dir)
-      copy_files(@game_dir, @game_data_dir, out_dir)
+      copy_files(@patch_assets_dir, out_dir)
+      copy_files(@game_dir, out_dir)
     end
 
     private
@@ -225,20 +226,20 @@ module WolfTrans
     def strings_of_command(command)
       case command
       when WolfRpg::Command::Message
-        yield command.text unless command.text.empty?
+        yield command.text if Util.translatable? command.text
       when WolfRpg::Command::Choices
         command.text.each do |s|
-          yield s
+          yield s if Util.translatable? s
         end
       when WolfRpg::Command::StringCondition
         command.string_args.each do |s|
-          yield s unless s.empty?
+          yield s if Util.translatable? s
         end
       when WolfRpg::Command::SetString
-        yield command.text unless command.text.empty?
+        yield command.text if Util.translatable? command.text
       when WolfRpg::Command::Picture
         if command.type == :text
-          yield command.text unless command.text.empty?
+          yield command.text if Util.translatable? command.text
         end
       end
     end
@@ -295,63 +296,54 @@ module WolfTrans
 
     # Yield a translation for the given string and context if it exists
     def yield_translation(string, context)
-      return if string.empty?
+      return unless Util.translatable? string
       if @strings.include? string
-        unless @strings[string][context].string.empty?
+        unless @strings[string][context].string
           yield @strings[string][context].string
         end
       end
     end
 
     # Copy normal, non-data files
-    def copy_files(src_dir, src_data_dir, out_dir)
+    def copy_files(src_dir, out_dir)
       Find.find(src_dir) do |path|
-        next if path == src_dir
-        Find.prune if path == src_data_dir
+        basename = File.basename(path)
+        basename_downcase = basename.downcase
+
+        # Don't do anything in Data/
+        Find.prune if basename_downcase == 'data' && File.dirname(path) == src_dir
+
+        # Skip directories
+        next if FileTest.directory? path
+
+        # "Short name", relative to the game base dir
         short_path = path[src_dir.length+1..-1]
         Find.prune if @file_blacklist.include? short_path.downcase
+
         out_path = "#{out_dir}/#{short_path}"
-        if FileTest.directory? path
-          FileUtils.mkdir_p(out_path)
-        else
-          next if ['thumbs.db', 'desktop.ini', '.ds_store'].include? File.basename(path).downcase
-          FileUtils.cp(path, out_path) unless File.exist? out_path
-        end
+        next if ['thumbs.db', 'desktop.ini', '.ds_store'].include? basename_downcase
+        next if File.exist? out_path
+        # Make directory only only when copying a file to avoid making empty directories
+        FileUtils.mkdir_p(File.dirname(out_path))
+        FileUtils.cp(path, out_path)
       end
     end
 
     # Copy data files
-    def copy_data_files(out_data_dir, dirname, extensions)
-      copy_data_files_from(@game_data_dir, out_data_dir, dirname, extensions)
-      if @patch_data_dir
-        copy_data_files_from(@patch_data_dir, out_data_dir, dirname, extensions)
-      end
-    end
+    def copy_data_files(src_dir, extensions, out_dir)
+      Dir.entries(src_dir).each do |entry|
+        # Don't care about directories
+        next if entry == '.' || entry == '..'
+        path = "#{src_dir}/#{entry}"
+        next if FileTest.directory? path
 
-    def copy_data_files_from(src_data_dir, out_data_dir, dirname, extensions)
-      out_dir = File.join(out_data_dir, dirname)
+        # Skip invalid file extensions
+        next unless extensions.include? File.extname(entry)[1..-1]
 
-      Find.find(src_data_dir) do |path|
-        if dirname.empty?
-          if FileTest.directory? path
-            Find.prune if path != src_data_dir
-            next
-          end
-        else
-          next if path == src_data_dir
-          if FileTest.directory?(path)
-            Find.prune unless File.basename(path).casecmp(dirname) == 0
-            next
-          end
-          next if File.dirname(path) == src_data_dir
-        end
-        basename = File.basename(path)
-        next unless extensions.include? File.extname(basename)[1..-1]
-        next if @file_blacklist.include? "data/#{dirname.downcase}/#{basename.downcase}"
-        out_name = "#{out_dir}/#{basename}"
-        next if File.exist? out_name
-        FileUtils.mkdir_p(out_dir)
-        FileUtils.cp(path, out_name)
+        # Copy the file if it doesn't already exist
+        next if Util.join_path_nocase(out_dir, entry)
+
+        FileUtils.cp(path, "#{out_dir}/#{entry}")
       end
     end
   end

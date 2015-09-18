@@ -24,7 +24,7 @@ module WolfTrans
       # Load blacklist
       @file_blacklist = []
       if File.exists? "#{patch_dir}/blacklist.txt"
-        IO.read_txt("#{patch_dir}/blacklist.txt").each_line do |line|
+        Util.read_txt("#{patch_dir}/blacklist.txt").each_line do |line|
           line.strip!
           next if line.empty?
           if line.include? '\\'
@@ -87,7 +87,7 @@ module WolfTrans
 
       if File.exists? filename
         output_write = true if mode == :update
-        IO.read_txt(filename).each_line.with_index do |pristine_line, index|
+        Util.read_txt(filename).each_line.with_index do |pristine_line, index|
           # Remove comments and strip
           pristine_line.gsub!(/\n$/, '')
           line = pristine_line.gsub(/(?!\\)#.*$/, '').rstrip
