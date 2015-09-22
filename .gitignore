@@ -1,0 +1,6 @@
+# Ignore generated files
+*.gem
+
+# Ignore any zip archives or extracted data in test/
+test/*/*
+test/*.zip
