@@ -18,7 +18,8 @@ module WolfRpg
         # Read basic data
         @width = coder.read_int
         @height = coder.read_int
-        @events = Array.new(coder.read_int)
+        coder.skip(4) # skip event count
+        @events = []
 
         # Read tiles
         #TODO: interpret this data later
@@ -26,8 +27,7 @@ module WolfRpg
 
         # Read events
         while (indicator = coder.read_byte) == 0x6F
-          event = Event.new(coder)
-          @events[event.id] = event
+          @events << Event.new(coder)
         end
         if indicator != 0x66
           raise "unexpected event indicator: #{indicator.to_s(16)}"
