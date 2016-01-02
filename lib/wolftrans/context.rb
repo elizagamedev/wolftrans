@@ -14,7 +14,7 @@ module WolfTrans
       type, path = pair
       path = path.split('/')
 
-      case type
+	  case type
       when 'MPS'
         return MapEvent.from_string(path)
       when 'GAMEDAT'
@@ -175,7 +175,11 @@ module WolfTrans
 
       def self.from_string(path)
         if path.size != 4
-          raise "invalid path specified for DB context line"
+          path = path.join("/")
+          path = path.split(/\/(?=\[\d+\])/)
+          if path.size != 4
+            raise "invalid path specified for DB context line"
+          end
         end
         indices = Array.new(3)
         path.each_with_index do |str, i|
