@@ -64,9 +64,10 @@ module WolfTrans
 
     # Apply the patch to the files in the game path and write them to the
     # output directory
-    DATA_FILE_EXTENSIONS = ['png','jpg','jpeg','bmp','ogg',
-                            'mp3','wav','mid','midi',
-                            'dat','project','xxxxx']
+    DATA_FILE_EXTENSIONS = ['gif','png','jpg','jpeg','bmp',
+                            'ogg','mp3','wav','mid','midi',
+                            'dat','project','xxxxx',
+                            'txt']
     def apply(out_dir)
       out_dir = Util.sanitize_path(out_dir)
       out_data_dir = "#{out_dir}/Data"
@@ -135,7 +136,7 @@ module WolfTrans
 
         # Find the corresponding folder in the patch
         if @patch_data_dir && (asset_entry = Util.join_path_nocase(@patch_data_dir, entry))
-          copy_data_files("#{@patch_data_dir}/#{asset_entry}", DATA_FILE_EXTENSIONS, out_path)
+          copy_data_files(asset_entry, DATA_FILE_EXTENSIONS, out_path)
         end
 
         # Copy the original game files
