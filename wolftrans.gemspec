@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.description   = s.summary
   s.authors       = ['Mathew Velasquez']
   s.email         = 'mathewvq@gmail.com'
-  s.files         = `git ls-files -z`.split("\x0")
+  s.files         = Dir.glob("{bin,lib}/**/*") + %w(LICENSE README.md)
   s.executables   << 'wolftrans'
   s.homepage      = 'https://github.com/mathewv/wolftrans'
   s.license       = 'MPL'
