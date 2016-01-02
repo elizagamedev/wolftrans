@@ -263,6 +263,12 @@ module WolfRpg
     end
 
     class Database < Command
+      def text
+        @string_args[2].to_s
+      end
+      def text=(value)
+        @string_args[2] = value
+      end
     end
 
     class ImportDatabase < Command
