@@ -10,8 +10,15 @@ module WolfTrans
 
     # Get the name of a path case-insensitively
     def self.join_path_nocase(parent, child)
-      child_downcase = child.downcase
-      child_case = Dir.entries(parent).select { |e| e.downcase == child_downcase }.first
+      parent.encode!(__ENCODING__) if (parent.encoding != __ENCODING__)
+      child.encode!(__ENCODING__) if (child.encoding != __ENCODING__)
+      child_downcase = File.basename("#{parent}/#{child}").downcase
+	  parent = File.dirname("#{parent}/#{child}")
+	  begin
+        child_case = Dir.entries(parent).select { |e| e.downcase == child_downcase }.first
+      rescue
+        return nil
+      end
       return nil unless child_case
       return "#{parent}/#{child_case}"
     end
