@@ -336,19 +336,29 @@ module WolfTrans
 
     # Copy data files
     def copy_data_files(src_dir, extensions, out_dir)
-      Dir.entries(src_dir).each do |entry|
-        # Don't care about directories
-        next if entry == '.' || entry == '..'
-        path = "#{src_dir}/#{entry}"
-        next if FileTest.directory? path
+	  src_dir.encode!(__ENCODING__) if (src_dir.encoding != __ENCODING__)
+	  out_dir.encode!(__ENCODING__) if (out_dir.encoding != __ENCODING__)
+      Dir.chdir(src_dir) do
+        Dir.glob(File.join("**", "*.*")).each do |entry|
+          # Don't care about directories
+          next if entry == '.' || entry == '..'
+		  puts("Encoding: #{src_dir.encoding}|#{entry.encoding}") if (src_dir.encoding != __ENCODING__ || out_dir.encoding != __ENCODING__)
+          path = "#{src_dir}/#{entry}"
+          next if FileTest.directory? path
 
-        # Skip invalid file extensions
-        next unless extensions.include? File.extname(entry)[1..-1]
+          # Skip invalid file extensions
+          next unless extensions.include? File.extname(entry)[1..-1]
 
-        # Copy the file if it doesn't already exist
-        next if Util.join_path_nocase(out_dir, entry)
+          # Copy the file if it doesn't already exist
+          next if Util.join_path_nocase(out_dir, entry)
 
-        FileUtils.cp(path, "#{out_dir}/#{entry}")
+          begin
+            FileUtils.cp(path, "#{out_dir}/#{entry}")
+          rescue
+            FileUtils.mkdir_p(File.dirname("#{out_dir}/#{entry}"))
+            FileUtils.cp(path, "#{out_dir}/#{entry}")
+          end
+        end
       end
     end
   end
