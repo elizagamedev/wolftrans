@@ -241,6 +241,8 @@ module WolfTrans
         if command.type == :text
           yield command.text if Util.translatable? command.text
         end
+      when WolfRpg::Command::Database
+        yield command.text if Util.translatable? command.text
       end
     end
 
@@ -272,6 +274,10 @@ module WolfTrans
           yield_translation(command.text, context) do |str|
             command.text = str
           end
+        end
+      when WolfRpg::Command::Database
+        yield_translation(command.text, context) do |str|
+          command.text = str
         end
       end
     end
