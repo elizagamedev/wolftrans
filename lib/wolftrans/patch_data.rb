@@ -342,7 +342,6 @@ module WolfTrans
         Dir.glob(File.join("**", "*.*")).each do |entry|
           # Don't care about directories
           next if entry == '.' || entry == '..'
-		  puts("Encoding: #{src_dir.encoding}|#{entry.encoding}") if (src_dir.encoding != __ENCODING__ || out_dir.encoding != __ENCODING__)
           path = "#{src_dir}/#{entry}"
           next if FileTest.directory? path
 
