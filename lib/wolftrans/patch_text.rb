@@ -251,7 +251,7 @@ module WolfTrans
             contexts.each do |context, trans|
               next unless trans.autogenerate?
               trans.autogenerate = false
-              output << "> CONTEXT " << context.to_s << " < UNTRANSLATED\n"
+              output << "> CONTEXT " << context.to_s << " < UNTRANSLATED\n" rescue output << context.to_s.encode!(output.encoding) << " < UNTRANSLATED\n"
             end
             output << "\n> END STRING\n"
           end
