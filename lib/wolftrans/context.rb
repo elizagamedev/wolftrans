@@ -14,7 +14,7 @@ module WolfTrans
       type, path = pair
       path = path.split('/')
 
-	  case type
+      case type
       when 'MPS'
         return MapEvent.from_string(path)
       when 'GAMEDAT'
