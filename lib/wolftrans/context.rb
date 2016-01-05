@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module WolfTrans
   # Represents the context of a translatable string
   class Context

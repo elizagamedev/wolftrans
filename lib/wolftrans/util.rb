@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module WolfTrans
   module Util
     # Sanitize a path; i.e., standardize path separators remove trailing separator

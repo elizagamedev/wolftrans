@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'wolfrpg/route'
 
 # Special thanks to vgperson for mapping most of these command IDs out.
@@ -264,7 +266,7 @@ module WolfRpg
 
     class Database < Command
       def text
-        @string_args[2].to_s
+        @string_args[2]
       end
       def text=(value)
         @string_args[2] = value
