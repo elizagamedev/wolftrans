@@ -337,10 +337,10 @@ module WolfTrans
 
     # Copy data files
     def copy_data_files(src_dir, extensions, out_dir)
-	  src_dir.encode!(__ENCODING__) if (src_dir.encoding != __ENCODING__)
-	  out_dir.encode!(__ENCODING__) if (out_dir.encoding != __ENCODING__)
+      src_dir.encode!(__ENCODING__) if (src_dir.encoding != __ENCODING__)
+      out_dir.encode!(__ENCODING__) if (out_dir.encoding != __ENCODING__)
       Dir.chdir(src_dir) do
-        Dir.glob(File.join("**", "*.*")).each do |entry|
+        Dir.glob(File.join("**", "*")).each do |entry|
           # Don't care about directories
           next if entry == '.' || entry == '..'
           path = "#{src_dir}/#{entry}"

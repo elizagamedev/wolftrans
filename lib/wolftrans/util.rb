@@ -13,8 +13,8 @@ module WolfTrans
       parent.encode!(__ENCODING__) if (parent.encoding != __ENCODING__)
       child.encode!(__ENCODING__) if (child.encoding != __ENCODING__)
       child_downcase = File.basename("#{parent}/#{child}").downcase
-	  parent = File.dirname("#{parent}/#{child}")
-	  begin
+      parent = File.dirname("#{parent}/#{child}")
+      begin
         child_case = Dir.entries(parent).select { |e| e.downcase == child_downcase }.first
       rescue
         return nil
