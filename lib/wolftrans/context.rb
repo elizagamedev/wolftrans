@@ -172,7 +172,10 @@ module WolfTrans
       end
 
       def self.from_data(db_name, type_index, type, datum_index, datum, field)
-        Database.new(db_name, type_index, type.name, datum_index, datum.name, field.index, field.name)
+        Database.new(db_name,
+                     type_index, type.name.gsub('/', '_'),
+                     datum_index, datum.name.gsub('/', '_'),
+                     field.index, field.name.gsub('/', '_'))
       end
 
       def self.from_string(path)
