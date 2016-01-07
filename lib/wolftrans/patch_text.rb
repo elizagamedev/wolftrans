@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'wolftrans/context'
 require 'wolfrpg'
 
@@ -251,7 +253,7 @@ module WolfTrans
             contexts.each do |context, trans|
               next unless trans.autogenerate?
               trans.autogenerate = false
-              output << "> CONTEXT " << context.to_s << " < UNTRANSLATED\n"
+              output << "> CONTEXT " << context.to_s << " < UNTRANSLATED\n" rescue output << context.to_s.encode!(output.encoding) << " < UNTRANSLATED\n"
             end
             output << "\n> END STRING\n"
           end
@@ -260,7 +262,7 @@ module WolfTrans
         # Write the output to the file
         if output_write
           FileUtils.mkdir_p(File.dirname(filename))
-          File.open(filename, 'wb') { |file| file.write(output) }
+          File.open(filename, 'wb:UTF-8') { |file| file.write(output) }
         end
       end
     end

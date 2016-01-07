@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module WolfRpg
   class Map
     attr_reader :tileset_id

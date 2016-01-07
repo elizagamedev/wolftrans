@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'wolftrans/context'
 require 'wolfrpg'
 
@@ -64,9 +66,10 @@ module WolfTrans
 
     # Apply the patch to the files in the game path and write them to the
     # output directory
-    DATA_FILE_EXTENSIONS = ['png','jpg','jpeg','bmp','ogg',
-                            'mp3','wav','mid','midi',
-                            'dat','project','xxxxx']
+    DATA_FILE_EXTENSIONS = ['gif','png','jpg','jpeg','bmp',
+                            'ogg','mp3','wav','mid','midi',
+                            'dat','project','xxxxx',
+                            'txt']
     def apply(out_dir)
       out_dir = Util.sanitize_path(out_dir)
       out_data_dir = "#{out_dir}/Data"
@@ -121,7 +124,7 @@ module WolfTrans
       @game_dat.dump("#{out_dir}/#{@game_dat_filename}")
 
       # Copy image/sound/music files
-      Dir.entries(@game_data_dir).each do |entry|
+      Dir.entries(@game_data_dir, encoding: __ENCODING__).each do |entry|
         # Skip dot and dot-dot and non-directories
         next if entry == '.' || entry == '..'
         path = "#{@game_data_dir}/#{entry}"
@@ -135,7 +138,7 @@ module WolfTrans
 
         # Find the corresponding folder in the patch
         if @patch_data_dir && (asset_entry = Util.join_path_nocase(@patch_data_dir, entry))
-          copy_data_files("#{@patch_data_dir}/#{asset_entry}", DATA_FILE_EXTENSIONS, out_path)
+          copy_data_files(asset_entry, DATA_FILE_EXTENSIONS, out_path)
         end
 
         # Copy the original game files
@@ -241,6 +244,8 @@ module WolfTrans
         if command.type == :text
           yield command.text if Util.translatable? command.text
         end
+      when WolfRpg::Command::Database
+        yield command.text if Util.translatable? command.text
       end
     end
 
@@ -272,6 +277,10 @@ module WolfTrans
           yield_translation(command.text, context) do |str|
             command.text = str
           end
+        end
+      when WolfRpg::Command::Database
+        yield_translation(command.text, context) do |str|
+          command.text = str
         end
       end
     end
@@ -330,19 +339,23 @@ module WolfTrans
 
     # Copy data files
     def copy_data_files(src_dir, extensions, out_dir)
-      Dir.entries(src_dir).each do |entry|
-        # Don't care about directories
-        next if entry == '.' || entry == '..'
-        path = "#{src_dir}/#{entry}"
-        next if FileTest.directory? path
+      Dir.chdir(src_dir) do
+        Dir.glob(File.join("**", "*")).each do |entry|
+          # Don't care about directories
+          next if entry == '.' || entry == '..'
+          path = "#{src_dir}/#{entry}"
+          next if FileTest.directory? path
 
-        # Skip invalid file extensions
-        next unless extensions.include? File.extname(entry)[1..-1]
+          # Skip invalid file extensions
+          next unless extensions.include? File.extname(entry)[1..-1]
 
-        # Copy the file if it doesn't already exist
-        next if Util.join_path_nocase(out_dir, entry)
+          # Copy the file if it doesn't already exist
+          next if Util.join_path_nocase(out_dir, entry)
 
-        FileUtils.cp(path, "#{out_dir}/#{entry}")
+          out_dirname = File.dirname("#{out_dir}/#{entry}")
+          FileUtils.mkdir_p(out_dirname) unless Dir.exist?(out_dirname)
+          FileUtils.cp(path, "#{out_dir}/#{entry}")
+        end
       end
     end
   end

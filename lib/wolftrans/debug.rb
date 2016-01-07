@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module WolfTrans
   module Debug
     def self.grep(dir, needle)
