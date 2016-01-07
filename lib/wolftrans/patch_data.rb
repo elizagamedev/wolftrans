@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'wolftrans/context'
 require 'wolfrpg'
 
@@ -122,7 +124,7 @@ module WolfTrans
       @game_dat.dump("#{out_dir}/#{@game_dat_filename}")
 
       # Copy image/sound/music files
-      Dir.entries(@game_data_dir).each do |entry|
+      Dir.entries(@game_data_dir, encoding: __ENCODING__).each do |entry|
         # Skip dot and dot-dot and non-directories
         next if entry == '.' || entry == '..'
         path = "#{@game_data_dir}/#{entry}"
@@ -337,8 +339,6 @@ module WolfTrans
 
     # Copy data files
     def copy_data_files(src_dir, extensions, out_dir)
-      src_dir.encode!(__ENCODING__) if (src_dir.encoding != __ENCODING__)
-      out_dir.encode!(__ENCODING__) if (out_dir.encoding != __ENCODING__)
       Dir.chdir(src_dir) do
         Dir.glob(File.join("**", "*")).each do |entry|
           # Don't care about directories
@@ -352,9 +352,9 @@ module WolfTrans
           # Copy the file if it doesn't already exist
           next if Util.join_path_nocase(out_dir, entry)
 
-          begin
+          if Dir.exist?(File.dirname("#{out_dir}/#{entry}"))
             FileUtils.cp(path, "#{out_dir}/#{entry}")
-          rescue
+          else
             FileUtils.mkdir_p(File.dirname("#{out_dir}/#{entry}"))
             FileUtils.cp(path, "#{out_dir}/#{entry}")
           end

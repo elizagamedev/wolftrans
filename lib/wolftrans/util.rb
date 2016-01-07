@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module WolfTrans
   module Util
     # Sanitize a path; i.e., standardize path separators remove trailing separator
@@ -10,15 +12,10 @@ module WolfTrans
 
     # Get the name of a path case-insensitively
     def self.join_path_nocase(parent, child)
-      parent.encode!(__ENCODING__) if (parent.encoding != __ENCODING__)
-      child.encode!(__ENCODING__) if (child.encoding != __ENCODING__)
       child_downcase = File.basename("#{parent}/#{child}").downcase
       parent = File.dirname("#{parent}/#{child}")
-      begin
-        child_case = Dir.entries(parent).select { |e| e.downcase == child_downcase }.first
-      rescue
-        return nil
-      end
+      return nil unless Dir.exist?(parent)
+      child_case = Dir.entries(parent).select { |e| e.downcase == child_downcase }.first
       return nil unless child_case
       return "#{parent}/#{child_case}"
     end

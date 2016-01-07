@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module WolfRpg
   class FileCoder
     ##############
@@ -18,7 +20,7 @@ module WolfRpg
     def self.open(filename, mode, seed_indices = nil, crypt_header = nil)
       case mode
       when :read
-        coder = FileCoder.new(File.open(filename, 'rb'))
+        coder = FileCoder.new(File.open(filename, 'rb:BINARY'))
 
         # If encryptable,
         # we need to make an extra check to see if it needs decrypting
@@ -35,11 +37,11 @@ module WolfRpg
         # If encryptable, open a StringIO and pass the encryption options
         # to the FileCoder
         if seed_indices && crypt_header
-          coder = FileCoder.new(StringIO.new(''.force_encoding('BINARY'), 'wb'),
+          coder = FileCoder.new(StringIO.new(String.new.force_encoding('BINARY'), 'wb:BINARY'),
                                 crypt_header, filename, seed_indices)
           coder.write(crypt_header.pack('C*'))
         else
-          coder = FileCoder.new(File.open(filename, 'wb'))
+          coder = FileCoder.new(File.open(filename, 'wb:BINARY'))
           coder.write_byte(0) if seed_indices
         end
       end
@@ -131,7 +133,7 @@ module WolfRpg
     end
 
     def dump_until(pattern)
-      str = ''.force_encoding('BINARY')
+      str = String.new.force_encoding('BINARY')
       until str.end_with? pattern
         str << @io.readpartial(1)
       end
@@ -156,7 +158,7 @@ module WolfRpg
     end
 
     def write_string(str)
-      str = str.encode(Encoding::WINDOWS_31J, Encoding::UTF_8)
+      str = str.encode(Encoding::WINDOWS_31J)
       write_int(str.bytesize + 1)
       write(str)
       write_byte(0)
@@ -187,7 +189,7 @@ module WolfRpg
     # Other #
     def close
       if @crypt_header && @filename && @seed_indices
-        File.open(@filename, 'wb') do |file|
+        File.open(@filename, 'wb:BINARY') do |file|
           file.write(@crypt_header.pack('C*'))
           seeds = @seed_indices.map { |i| crypt_header[i] }
           file.write(FileCoder.crypt(@io.string, seeds))

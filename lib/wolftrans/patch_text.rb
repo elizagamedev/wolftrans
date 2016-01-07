@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'wolftrans/context'
 require 'wolfrpg'
 
@@ -260,7 +262,7 @@ module WolfTrans
         # Write the output to the file
         if output_write
           FileUtils.mkdir_p(File.dirname(filename))
-          File.open(filename, 'wb') { |file| file.write(output) }
+          File.open(filename, 'wb:UTF-8') { |file| file.write(output) }
         end
       end
     end

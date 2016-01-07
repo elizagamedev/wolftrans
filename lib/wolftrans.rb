@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'wolftrans/util.rb'
 
 require 'wolftrans/patch_text'

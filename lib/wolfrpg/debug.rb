@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module WolfRpg
   # Find strings in binary string and return them inline in an array
   def self.parse_strings(data)

@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module WolfRpg
   class RouteCommand
     def self.create(coder)

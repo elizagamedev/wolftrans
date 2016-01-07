@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module WolfTrans
   # Represents the context of a translatable string
   class Context
@@ -170,16 +172,15 @@ module WolfTrans
       end
 
       def self.from_data(db_name, type_index, type, datum_index, datum, field)
-        Database.new(db_name, type_index, type.name, datum_index, datum.name, field.index, field.name)
+        Database.new(db_name,
+                     type_index, type.name.gsub('/', '_'),
+                     datum_index, datum.name.gsub('/', '_'),
+                     field.index, field.name.gsub('/', '_'))
       end
 
       def self.from_string(path)
         if path.size != 4
-          path = path.join("/")
-          path = path.split(/\/(?=\[\d+\])/)
-          if path.size != 4
-            raise "invalid path specified for DB context line"
-          end
+          raise "invalid path specified for DB context line"
         end
         indices = Array.new(3)
         path.each_with_index do |str, i|
