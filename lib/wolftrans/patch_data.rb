@@ -352,7 +352,8 @@ module WolfTrans
           # Copy the file if it doesn't already exist
           next if Util.join_path_nocase(out_dir, entry)
 
-          FileUtils.mkdir_p(File.dirname("#{out_dir}/#{entry}")) unless Dir.exist?(File.dirname("#{out_dir}/#{entry}"))
+          out_dirname = File.dirname("#{out_dir}/#{entry}")
+          FileUtils.mkdir_p(out_dirname) unless Dir.exist?(out_dirname)
           FileUtils.cp(path, "#{out_dir}/#{entry}")
         end
       end
