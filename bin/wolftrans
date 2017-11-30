@@ -5,6 +5,7 @@ require 'wolftrans'
 
 if ARGV.size != 3
   STDERR.puts "usage: wolftrans game_dir patch_dir out_dir"
+  STDERR.puts "WARNING: out_dir will be DELETED. Use caution."
   exit 1
 end
 

@@ -36,6 +36,8 @@ Currently, Wolf Trans can be invoked with the command line:
 
 If `patch_dir` does not exist, it will be automatically generated with the text contained in the data files of the game in `game_dir`. `out_dir` will contain the patched game.
 
+**WARNING: OUT_DIR WILL BE *DELETED* IF IT EXISTS. USE CAUTION.**
+
 The behavior of the command line arguments will almost certainly be revised in a future version.
 
 ## Todo
