@@ -174,6 +174,10 @@ module WolfTrans
       end
 
       def self.from_string(path)
+        if path.size > 4
+            path[3] = path[3..path.size].join("/")
+            path = path[0..3]
+        end
         if path.size != 4
           raise "invalid path specified for DB context line"
         end

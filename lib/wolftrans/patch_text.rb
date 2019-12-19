@@ -86,6 +86,7 @@ module WolfTrans
       pristine_translated_string = ''
 
       if File.exists? filename
+        STDOUT << filename + "\n"
         output_write = true if mode == :update
         Util.read_txt(filename).each_line.with_index do |pristine_line, index|
           # Remove comments and strip
