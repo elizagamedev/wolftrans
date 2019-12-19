@@ -49,7 +49,8 @@ module WolfTrans
         end
       end
       # Convert Windows newlines and return
-      text.gsub(/\r\n?/, "\n")
+      # text.gsub(/\r\n?/, "\n")
+	  text.encode(universal_newline: true)
     end
   end
 end
